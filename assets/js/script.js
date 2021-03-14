@@ -136,8 +136,65 @@ $('.list-group').on('blur', "input[type='text']", function() {
 
   // replace input with span element
   $(this).replaceWith(taskSpan)
+})
+
+$('.card .list-group').sortable({
+  connectWith: $('.card .list-group'),
+  scroll: false,
+  tolerance: 'pointer',
+  helper: 'clone',
+  activate: function(event) {
+    // console.log('activate', this);
+  },
+  deactivate: function(event) {
+    // console.log('deactivate', this);
+  },
+  over: function(event) {
+    // console.log('over', event.target);
+  },
+  out: function(event) {
+    // console.log('out', event.target);
+  },
+  update: function(event) {
+       // array to store task data
+  var tempArr = [];
+      // loop over current set of children in sorrtable list
+    $(this).children().each(function() {
+      var text = $(this)
+        .find('p')
+        .text()
+        .trim();
+      
+      var date = $(this)
+        .find('span')
+        .text()
+        .trim();
+
+        tempArr.push({ 
+          text: text, 
+          date: date
+        })
+    });
+
+    console.log(tempArr)
+ 
 
 
+
+
+
+
+    // trim down list id to match object prop
+  var arrName = $(this)
+    .attr('id')
+    .replace('list-', '');
+
+    // update array on tasks object and save
+  tasks[arrName] = tempArr;
+  saveTasks()
+
+
+  },
 })
 
 
