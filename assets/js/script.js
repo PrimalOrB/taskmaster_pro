@@ -158,16 +158,26 @@ $('.card .list-group').sortable({
   tolerance: 'pointer',
   helper: 'clone',
   activate: function(event) {
-    // console.log('activate', this);
+    $(this)
+      .addClass( 'dropover' )
+    $('.bottom-trash')
+      .addClass( 'bottom-trash-drag' )
   },
   deactivate: function(event) {
-    // console.log('deactivate', this);
+    $(this)
+      .removeClass( 'dropover' )  
+    $('.bottom-trash')
+      .removeClass( 'bottom-trash-drag' )
   },
   over: function(event) {
-    // console.log('over', event.target);
+    event.target.classList.add( 'dropover-active' )
+    $('.bottom-trash')
+      .addClass( 'bottom-trash-active' )
   },
   out: function(event) {
-    // console.log('out', event.target);
+    event.target.classList.remove( 'dropover-active' )
+    $('.bottom-trash')
+      .removeClass( 'bottom-trash-active' )
   },
   update: function(event) {
        // array to store task data
@@ -209,10 +219,8 @@ $('#trash').droppable({
     ui.draggable.remove()
   },
   over: function( event, ui ) {
-    console.log('over')
   },
   out: function( event, ui ) {
-    console.log('out')
   },
   
 })
@@ -232,7 +240,7 @@ $("#task-form-modal").on("shown.bs.modal", function() {
 });
 
 // save button in modal was clicked
-$("#task-form-modal .btn-primary").click(function() {
+$("#task-form-modal .btn-save").click(function() {
   // get form values
   var taskText = $("#modalTaskDescription").val();
   var taskDate = $("#modalDueDate").val();
@@ -289,6 +297,11 @@ function auditTask( taskEl ) {
   } else if ( Math.abs( moment().diff( time, 'days' ) ) <= 2 ) {
     $(taskEl).addClass( 'list-group-item-warning' );
   }
-
 }
+
+setInterval( function() {
+  $( '.card .list-group-item' ).each( function( index, el ) {
+    auditTask( el );
+  })
+}, ( 1000 * 60 ) * 30 );
 
