@@ -13,6 +13,8 @@ var createTask = function(taskText, taskDate, taskList) {
   // append span and p element to parent li
   taskLi.append(taskSpan, taskP);
 
+  auditTask( taskLi )
+
 
   // append to ul list on the page
   $("#list-" + taskList).append(taskLi);
@@ -58,8 +60,9 @@ $('.list-group').on('click', 'p', function() {
   console.log(text);
 })
 
+// editing of current text
 $('.list-group').on('blur', 'textarea', function() {
-  // get the text area's current value/test
+  // get the text area's current value/text
   var text = $(this)
     .val()
     .trim();
@@ -102,13 +105,22 @@ $('.list-group').on('click', 'span', function() {
     
   // swap out elements
   $(this).replaceWith(dateInput);
+
+  // enable jquery ui datepicker
+  dateInput.datepicker({
+    minDate: 1,
+    onClose: function() {
+      // when the calendar is closed, force a "change" event on the 'dateInput'
+      $(this).trigger( 'change' );
+    }
+  })
   
   // automatically focus on new element
   dateInput.trigger('focus');
 })
 
 // value of date was changed
-$('.list-group').on('blur', "input[type='text']", function() {
+$('.list-group').on('change', "input[type='text']", function() {
   // get current text
   var date = $(this)
     .val()
@@ -134,8 +146,10 @@ $('.list-group').on('blur', "input[type='text']", function() {
     .addClass('badge badge-primary badge pill')
     .text(date)
 
-  // replace input with span element
+    // replace input with span element
   $(this).replaceWith(taskSpan)
+
+    auditTask($(taskSpan).closest(".list-group-item"));
 })
 
 $('.card .list-group').sortable({
@@ -144,16 +158,26 @@ $('.card .list-group').sortable({
   tolerance: 'pointer',
   helper: 'clone',
   activate: function(event) {
-    // console.log('activate', this);
+    $(this)
+      .addClass( 'dropover' )
+    $('.bottom-trash')
+      .addClass( 'bottom-trash-drag' )
   },
   deactivate: function(event) {
-    // console.log('deactivate', this);
+    $(this)
+      .removeClass( 'dropover' )  
+    $('.bottom-trash')
+      .removeClass( 'bottom-trash-drag' )
   },
   over: function(event) {
-    // console.log('over', event.target);
+    event.target.classList.add( 'dropover-active' )
+    $('.bottom-trash')
+      .addClass( 'bottom-trash-active' )
   },
   out: function(event) {
-    // console.log('out', event.target);
+    event.target.classList.remove( 'dropover-active' )
+    $('.bottom-trash')
+      .removeClass( 'bottom-trash-active' )
   },
   update: function(event) {
        // array to store task data
@@ -195,10 +219,8 @@ $('#trash').droppable({
     ui.draggable.remove()
   },
   over: function( event, ui ) {
-    console.log('over')
   },
   out: function( event, ui ) {
-    console.log('out')
   },
   
 })
@@ -218,7 +240,7 @@ $("#task-form-modal").on("shown.bs.modal", function() {
 });
 
 // save button in modal was clicked
-$("#task-form-modal .btn-primary").click(function() {
+$("#task-form-modal .btn-save").click(function() {
   // get form values
   var taskText = $("#modalTaskDescription").val();
   var taskDate = $("#modalDueDate").val();
@@ -251,4 +273,35 @@ $("#remove-tasks").on("click", function() {
 // load tasks for the first time
 loadTasks();
 
+// modal date picker
+$('#modalDueDate').datepicker({
+  minDate: 1,
+})
+
+function auditTask( taskEl ) {
+    // get date 
+  var date = $(taskEl)
+    .find( 'span' )
+    .text()
+    .trim();
+
+    // convert to moment obj at 5:00p
+  var time = moment( date, 'L' ).set( 'hour', 17 );
+
+    // remove any old classes
+  $(taskEl).removeClass( 'list-group-item-warning list-group-item-danger' );
+
+    // apple new class if task is near/over due date
+  if ( moment().isAfter( time ) ) {
+    $(taskEl).addClass( 'list-group-item-danger' )
+  } else if ( Math.abs( moment().diff( time, 'days' ) ) <= 2 ) {
+    $(taskEl).addClass( 'list-group-item-warning' );
+  }
+}
+
+setInterval( function() {
+  $( '.card .list-group-item' ).each( function( index, el ) {
+    auditTask( el );
+  })
+}, ( 1000 * 60 ) * 30 );
 
